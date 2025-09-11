@@ -5,7 +5,6 @@ class FreshExtension_ArticleSummary_Controller extends Minz_ActionController
   public function summarizeAction()
   {
     $this->view->_layout(false);
-    // JSON - Set response header to JSON
     header('Content-Type: application/json');
 
     $oai_url = FreshRSS_Context::$user_conf->oai_url;
@@ -23,80 +22,77 @@ class FreshExtension_ArticleSummary_Controller extends Minz_ActionController
       || $this->isEmpty($oai_model)
       || $this->isEmpty($oai_prompt)
     ) {
-      echo json_encode(array(
-        'response' => array(
-          'data' => 'missing config',
-          'error' => 'configuration'
-        ),
+      echo json_encode([
+        'response' => ['data' => 'missing config', 'error' => 'configuration'],
         'status' => 200
-      ));
+      ]);
       return;
     }
 
     $entry_id = Minz_Request::param('id');
     $entry_dao = FreshRSS_Factory::createEntryDao();
     $entry = $entry_dao->searchById($entry_id);
-
     if ($entry === null) {
-      echo json_encode(array('status' => 404));
+      echo json_encode(['status' => 404]);
       return;
     }
 
-    $content = $entry->content(); // Replace with article content
+    $content = $entry->content();
+    // ⚠️ Ajout : on construit $markdownContent pour l’option Ollama (et c’est souvent mieux pour GPT aussi)
+    $markdownContent = $this->htmlToMarkdown($content);
 
-    // $oai_url
-    $oai_url = rtrim($oai_url, '/'); // Remove the trailing slash
-    // Ollama doesn't use versioned endpoints, so avoid appending /v1 for that provider
+    // Normalise l’URL pour compat Ollama/OpenAI
+    $oai_url = rtrim($oai_url, '/');
     if ($oai_provider !== 'ollama' && !preg_match('/\/v\d+\/?$/', $oai_url)) {
-        $oai_url .= '/v1'; // If there is no version information, add /v1
+      $oai_url .= '/v1';
     }
-    // Open AI Input
-    $successResponse = array(
-      'response' => array(
-        'data' => array(
-          // Determine whether the URL ends with a version. If it does, no version information is added. If not, /v1 is added by default.
-          "oai_url" => $oai_url . '/responses',
-          "oai_key" => $oai_key,
-          "model" => $oai_model,
-          "input" => [
-            [
-              "role" => "system",
-              "content" => $oai_prompt
-            ],
-            [
-              "role" => "user",
-              "content" => "input: \n" . $content,
-            ]
-          ],
-          "reasoning" => [ "effort" => "minimal" ],
-          "max_output_tokens" => 2048, // You can adjust the length of the summary as needed.
-          "temperature" => 1, // gpt-5-nano expects 1
-          "stream" => true
-      ),
-      'provider' => 'openai',
-      'error' => null
-      ),
-      'status' => 200
-    );
 
-    // Ollama API Input
-    if ($oai_provider === "ollama") {
-      $successResponse = array(
-        'response' => array(
-          'data' => array(
-            "oai_url" => rtrim($oai_url, '/') . '/api/generate',
-            "oai_key" => $oai_key,
-            "model" => $oai_model,
-            "system" => $oai_prompt,
-            "prompt" =>  $markdownContent,
-            "stream" => true,
-          ),
+    // Réponse par défaut : OpenAI via PROXY même-origine
+    $successResponse = [
+      'response' => [
+        'data' => [
+          'oai_url' => Minz_Url::display('/p/ext.php', 'f=xExtension-ArticleSummary/proxy_responses'),
+          // 👇 body attendu par /v1/responses, que le proxy forwardera tel quel
+          'payload' => [
+            'model' => $oai_model,
+            'input' => [
+              [ 'role' => 'system', 'content' => $oai_prompt ],
+              [ 'role' => 'user',   'content' => "input:\n" . $markdownContent ],
+            ],
+            'reasoning' => [ 'effort' => 'minimal' ],
+            'max_output_tokens' => 2048,
+            'temperature' => 1,
+            'stream' => true,
+          ],
+          // Pour éviter "Bearer undefined" côté JS, on renvoie une chaîne vide (le proxy ignore ce header)
+          'oai_key' => ''
+        ],
+        'provider' => 'openai',
+        'error' => null
+      ],
+      'status' => 200
+    ];
+
+    // Branche spéciale OLLAMA (si tu appelles un Ollama même-origine, tu peux laisser direct.
+    // Sinon, il faudra aussi passer par un proxy local si CSP bloque)
+    if ($oai_provider === 'ollama') {
+      $successResponse = [
+        'response' => [
+          'data' => [
+            'oai_url' => rtrim($oai_url, '/') . '/api/generate',
+            'oai_key' => '', // pas nécessaire, garde vide
+            'model' => $oai_model,
+            'system' => $oai_prompt,
+            'prompt' => $markdownContent,
+            'stream' => true,
+          ],
           'provider' => 'ollama',
           'error' => null
-        ),
+        ],
         'status' => 200
-      );
+      ];
     }
+
     echo json_encode($successResponse);
     return;
   }
@@ -111,10 +107,9 @@ class FreshExtension_ArticleSummary_Controller extends Minz_ActionController
     $tts_model = FreshRSS_Context::$user_conf->oai_tts_model;
     $voice = FreshRSS_Context::$user_conf->oai_voice;
     $speed = FreshRSS_Context::$user_conf->oai_speed;
-    if ($speed === null || !is_numeric($speed)) {
-      $speed = 1.1;
-    }
+    if ($speed === null || !is_numeric($speed)) { $speed = 1.1; }
     $speed = max(0.5, min(4, (float)$speed));
+
     $content = Minz_Request::param('content');
 
     if (
@@ -124,38 +119,34 @@ class FreshExtension_ArticleSummary_Controller extends Minz_ActionController
       $this->isEmpty($voice) ||
       $this->isEmpty($content)
     ) {
-      echo json_encode(array(
-        'response' => array(
-          'data' => 'missing config',
-          'error' => 'configuration'
-        ),
+      echo json_encode([
+        'response' => ['data' => 'missing config', 'error' => 'configuration'],
         'status' => 200
-      ));
+      ]);
       return;
     }
 
     $oai_url = rtrim($oai_url, '/');
-    if (!preg_match('/\/v\d+\/?$/', $oai_url)) {
-      $oai_url .= '/v1';
-    }
+    if (!preg_match('/\/v\d+\/?$/', $oai_url)) { $oai_url .= '/v1'; }
 
-    $successResponse = array(
-      'response' => array(
-        'data' => array(
-          'oai_url' => $oai_url . '/audio/speech',
-          'oai_key' => $oai_key,
+    // 👉 renvoie le proxy même-origine (le proxy appellera /v1/audio/speech côté serveur)
+    $successResponse = [
+      'response' => [
+        'data' => [
+          'oai_url' => Minz_Url::display('/p/ext.php', 'f=xExtension-ArticleSummary/proxy_tts'),
+          'oai_key' => '', // éviter Bearer undefined côté JS, le proxy n’utilise pas ce header
           'model' => $tts_model,
           'voice' => $voice,
           'speed' => $speed,
           'input' => $content,
           'stream' => true,
           'response_format' => 'opus',
-        ),
+        ],
         'provider' => 'openai',
         'error' => null
-      ),
+      ],
       'status' => 200
-    );
+    ];
 
     echo json_encode($successResponse);
     return;
@@ -171,9 +162,7 @@ class FreshExtension_ArticleSummary_Controller extends Minz_ActionController
     $tts_model = FreshRSS_Context::$user_conf->oai_tts_model;
     $voice = FreshRSS_Context::$user_conf->oai_voice;
     $speed = FreshRSS_Context::$user_conf->oai_speed;
-    if ($speed === null || !is_numeric($speed)) {
-      $speed = 1.1;
-    }
+    if ($speed === null || !is_numeric($speed)) { $speed = 1.1; }
     $speed = max(0.5, min(4, (float)$speed));
 
     if (
@@ -182,35 +171,28 @@ class FreshExtension_ArticleSummary_Controller extends Minz_ActionController
       $this->isEmpty($tts_model) ||
       $this->isEmpty($voice)
     ) {
-      echo json_encode(array(
-        'response' => array(
-          'data' => 'missing config',
-          'error' => 'configuration'
-        ),
+      echo json_encode([
+        'response' => ['data' => 'missing config', 'error' => 'configuration'],
         'status' => 200
-      ));
+      ]);
       return;
     }
 
-    $oai_url = rtrim($oai_url, '/');
-    if (!preg_match('/\/v\d+\/?$/', $oai_url)) {
-      $oai_url .= '/v1';
-    }
-
-    $successResponse = array(
-      'response' => array(
-        'data' => array(
-          'oai_url' => $oai_url,
-          'oai_key' => $oai_key,
+    // 👉 renvoie l’URL du proxy (même-origine) + pas de clé côté client
+    $successResponse = [
+      'response' => [
+        'data' => [
+          'oai_url' => Minz_Url::display('/p/ext.php', 'f=xExtension-ArticleSummary/proxy_tts'),
+          'oai_key' => '', // le proxy utilisera la clé serveur
           'model' => $tts_model,
           'voice' => $voice,
           'speed' => $speed,
           'response_format' => 'opus',
-        ),
+        ],
         'error' => null
-      ),
+      ],
       'status' => 200
-    );
+    ];
 
     echo json_encode($successResponse);
     return;
