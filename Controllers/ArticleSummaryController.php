@@ -216,6 +216,58 @@ class FreshExtension_ArticleSummary_Controller extends Minz_ActionController
     return;
   }
 
+  public function proxyAction()
+  {
+    $this->view->_layout(false);
+    $payload = json_decode(file_get_contents('php://input'), true);
+    if (!is_array($payload) || empty($payload['url'])) {
+      http_response_code(400);
+      return;
+    }
+
+    $url = $payload['url'];
+    $method = $payload['method'] ?? 'POST';
+    $headers = $payload['headers'] ?? [];
+    $body = isset($payload['body']) ? json_encode($payload['body']) : null;
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+    if ($body !== null) {
+      curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+    }
+    if (!empty($headers)) {
+      $curlHeaders = [];
+      foreach ($headers as $k => $v) {
+        $curlHeaders[] = $k . ': ' . $v;
+      }
+      curl_setopt($ch, CURLOPT_HTTPHEADER, $curlHeaders);
+    }
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
+    curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($ch, $header) {
+      $len = strlen($header);
+      if (stripos($header, 'content-type:') === 0) {
+        header($header);
+      }
+      return $len;
+    });
+    curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $chunk) {
+      echo $chunk;
+      if (function_exists('ob_flush')) {
+        @ob_flush();
+      }
+      flush();
+      return strlen($chunk);
+    });
+
+    curl_exec($ch);
+    if (curl_errno($ch)) {
+      http_response_code(500);
+    }
+    curl_close($ch);
+    return;
+  }
+
   private function isEmpty($item)
   {
     return $item === null || trim($item) === '';

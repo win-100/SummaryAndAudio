@@ -388,13 +388,20 @@ async function ttsButtonClick(target, forceStop = false, preload = false) {
     const controller = new AbortController();
     target._abortController = controller;
 
-    const audioResp = await fetch(params.oai_url, {
+    const audioResp = await fetch(container.dataset.proxy, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${params.oai_key}`
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        url: params.oai_url,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${params.oai_key}`
+        },
+        body: body
+      }),
       signal: controller.signal
     });
 
@@ -586,13 +593,20 @@ async function sendOpenAIRequest(container, oaiParams) {
     let body = JSON.parse(JSON.stringify(oaiParams));
     delete body['oai_url'];
     delete body['oai_key'];
-    const response = await fetch(oaiParams.oai_url, {
+    const response = await fetch(container.dataset.proxy, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${oaiParams.oai_key}`
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify({
+        url: oaiParams.oai_url,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${oaiParams.oai_key}`
+        },
+        body: body
+      })
     });
 
     if (!response.ok) {
@@ -663,13 +677,23 @@ async function sendOpenAIRequest(container, oaiParams) {
 async function sendOllamaRequest(container, oaiParams){
   const t = container.dataset;
   try {
-    const response = await fetch(oaiParams.oai_url, {
+    let body = JSON.parse(JSON.stringify(oaiParams));
+    delete body['oai_url'];
+    delete body['oai_key'];
+    const response = await fetch(container.dataset.proxy, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${oaiParams.oai_key}`
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(oaiParams)
+      body: JSON.stringify({
+        url: oaiParams.oai_url,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${oaiParams.oai_key}`
+        },
+        body: body
+      })
     });
 
     if (!response.ok) {

@@ -57,6 +57,10 @@ class ArticleSummaryExtension extends Minz_Extension
       'data-audio-failed' => self::t('audio_failed'),
       'data-receiving-answer' => self::t('receiving_answer'),
       'data-request-failed' => self::t('request_failed'),
+      'data-proxy' => Minz_Url::display(array(
+        'c' => 'ArticleSummary',
+        'a' => 'proxy'
+      )),
     ];
     $attr_str = '';
     foreach ($attrs as $name => $value) {
