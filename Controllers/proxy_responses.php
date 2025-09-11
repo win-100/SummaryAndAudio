@@ -1,5 +1,13 @@
 <?php
 
+$raw = file_get_contents('php://input');
+$payload = json_decode($raw, true) ?: [];
+
+// ⬇️ Déballe si c'est enveloppé
+if (isset($payload['payload']) && is_array($payload['payload'])) {
+    $payload = $payload['payload'];
+}
+
 class xExtension_ArticleSummary_proxy_responses_Action extends Minz_ActionController {
   public function index() {
     // Désactive le layout / toute sortie HTML

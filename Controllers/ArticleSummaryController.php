@@ -51,7 +51,7 @@ class FreshExtension_ArticleSummary_Controller extends Minz_ActionController
     $successResponse = [
       'response' => [
         'data' => [
-          'oai_url' => Minz_Url::display('/p/ext.php', 'f=xExtension-ArticleSummary/proxy_responses'),
+          'oai_url' => Minz_Url::display('/p/ext.php?f=xExtension-ArticleSummary/proxy_responses'),
           // 👇 body attendu par /v1/responses, que le proxy forwardera tel quel
           'payload' => [
             'model' => $oai_model,
@@ -133,7 +133,7 @@ class FreshExtension_ArticleSummary_Controller extends Minz_ActionController
     $successResponse = [
       'response' => [
         'data' => [
-          'oai_url' => Minz_Url::display('/p/ext.php', 'f=xExtension-ArticleSummary/proxy_tts'),
+          'oai_url' => Minz_Url::display('/p/ext.php?f=xExtension-ArticleSummary/proxy_tts'),
           'oai_key' => '', // éviter Bearer undefined côté JS, le proxy n’utilise pas ce header
           'model' => $tts_model,
           'voice' => $voice,
