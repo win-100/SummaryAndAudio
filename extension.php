@@ -3,10 +3,6 @@ class ArticleSummaryExtension extends Minz_Extension
 {
   private static ?array $i18n = null;
 
-  protected array $csp_policies = [
-    'default-src' => '*',
-  ];
-
   public function init()
   {
     $this->registerHook('entry_before_display', array($this, 'addSummaryButton'));

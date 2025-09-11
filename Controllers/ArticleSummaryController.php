@@ -219,7 +219,8 @@ class FreshExtension_ArticleSummary_Controller extends Minz_ActionController
   public function proxyAction()
   {
     $this->view->_layout(false);
-    $payload = json_decode(file_get_contents('php://input'), true);
+    $raw = Minz_Request::param('payload');
+    $payload = json_decode($raw, true);
     if (!is_array($payload) || empty($payload['url'])) {
       http_response_code(400);
       return;

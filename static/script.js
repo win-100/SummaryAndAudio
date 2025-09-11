@@ -128,9 +128,7 @@ async function summarizeButtonClick(target) {
 }
 
 function getProxyUrl(container) {
-  const base = container.dataset.proxy;
-  const sep = base.includes('?') ? '&' : '?';
-  return base + sep + 'ajax=true&_csrf=' + encodeURIComponent(context.csrf);
+  return container.dataset.proxy;
 }
 
 async function ttsButtonClick(target, forceStop = false, preload = false) {
@@ -395,20 +393,24 @@ async function ttsButtonClick(target, forceStop = false, preload = false) {
     target._abortController = controller;
 
     const proxyUrl = getProxyUrl(container);
+    const proxyParams = new URLSearchParams();
+    proxyParams.append('ajax', 'true');
+    proxyParams.append('_csrf', context.csrf);
+    proxyParams.append('payload', JSON.stringify({
+      url: params.oai_url,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${params.oai_key}`
+      },
+      body: body
+    }));
     const audioResp = await fetch(proxyUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: JSON.stringify({
-        url: params.oai_url,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${params.oai_key}`
-        },
-        body: body
-      }),
+      body: proxyParams,
       signal: controller.signal
     });
 
@@ -601,20 +603,24 @@ async function sendOpenAIRequest(container, oaiParams) {
     delete body['oai_url'];
     delete body['oai_key'];
     const proxyUrl = getProxyUrl(container);
+    const proxyParams = new URLSearchParams();
+    proxyParams.append('ajax', 'true');
+    proxyParams.append('_csrf', context.csrf);
+    proxyParams.append('payload', JSON.stringify({
+      url: oaiParams.oai_url,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${oaiParams.oai_key}`
+      },
+      body: body
+    }));
     const response = await fetch(proxyUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: JSON.stringify({
-        url: oaiParams.oai_url,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${oaiParams.oai_key}`
-        },
-        body: body
-      })
+      body: proxyParams
     });
 
     if (!response.ok) {
@@ -689,20 +695,24 @@ async function sendOllamaRequest(container, oaiParams){
     delete body['oai_url'];
     delete body['oai_key'];
     const proxyUrl = getProxyUrl(container);
+    const proxyParams = new URLSearchParams();
+    proxyParams.append('ajax', 'true');
+    proxyParams.append('_csrf', context.csrf);
+    proxyParams.append('payload', JSON.stringify({
+      url: oaiParams.oai_url,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${oaiParams.oai_key}`
+      },
+      body: body
+    }));
     const response = await fetch(proxyUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: JSON.stringify({
-        url: oaiParams.oai_url,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${oaiParams.oai_key}`
-        },
-        body: body
-      })
+      body: proxyParams
     });
 
     if (!response.ok) {
