@@ -127,6 +127,12 @@ async function summarizeButtonClick(target) {
   }
 }
 
+function getProxyUrl(container) {
+  const base = container.dataset.proxy;
+  const sep = base.includes('?') ? '&' : '?';
+  return base + sep + 'ajax=true&_csrf=' + encodeURIComponent(context.csrf);
+}
+
 async function ttsButtonClick(target, forceStop = false, preload = false) {
   const container = target.closest('.oai-summary-wrap');
   const log = container.querySelector('.oai-summary-log');
@@ -388,7 +394,8 @@ async function ttsButtonClick(target, forceStop = false, preload = false) {
     const controller = new AbortController();
     target._abortController = controller;
 
-    const audioResp = await fetch(container.dataset.proxy, {
+    const proxyUrl = getProxyUrl(container);
+    const audioResp = await fetch(proxyUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -593,7 +600,8 @@ async function sendOpenAIRequest(container, oaiParams) {
     let body = JSON.parse(JSON.stringify(oaiParams));
     delete body['oai_url'];
     delete body['oai_key'];
-    const response = await fetch(container.dataset.proxy, {
+    const proxyUrl = getProxyUrl(container);
+    const response = await fetch(proxyUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -680,7 +688,8 @@ async function sendOllamaRequest(container, oaiParams){
     let body = JSON.parse(JSON.stringify(oaiParams));
     delete body['oai_url'];
     delete body['oai_key'];
-    const response = await fetch(container.dataset.proxy, {
+    const proxyUrl = getProxyUrl(container);
+    const response = await fetch(proxyUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
