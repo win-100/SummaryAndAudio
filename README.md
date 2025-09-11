@@ -10,6 +10,7 @@ This project is a fork of [LiangWei88/xExtension-ArticleSummary](https://github.
 - **Summarize Button**: Adds a "summarize" button to each article, allowing users to generate a summary with a single click.
 - **Markdown Support**: Converts HTML content to Markdown before sending it to the API.
 - **Text-to-Speech**: Listen to articles using OpenAI's TTS with adjustable reading speed. Audio playback always uses OpenAI regardless of the summary provider.
+- **Server-side Requests**: Summary generation requests are now performed on the server, avoiding browser CSP restrictions and keeping API keys hidden from the client.
 - **Error Handling**: Provides feedback in case of API errors or incomplete configurations.
 - **Smart Fallback**: Uses the article's description if the main content is empty or contains only images.
 

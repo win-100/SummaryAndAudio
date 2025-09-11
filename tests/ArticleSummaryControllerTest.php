@@ -49,15 +49,15 @@ $output = ob_get_clean();
 
 // Decode the JSON response
 $data = json_decode($output, true);
-$model = $data['response']['data']['model'] ?? null;
+$summary = $data['response']['summary'] ?? null;
 
 // Simple assertion
-if ($model !== 'my-configured-model') {
-    echo "Model mismatch: expected my-configured-model, got {$model}\n";
+if ($summary !== 'test summary') {
+    echo "Summary mismatch: expected test summary, got {$summary}\n";
     exit(1);
 }
 
-echo "Model matches configuration\n";
+echo "Summary returned\n";
 
 // Test fetchTtsParamsAction()
 ob_start();
