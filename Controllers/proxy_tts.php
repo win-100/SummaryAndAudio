@@ -1,6 +1,6 @@
 <?php
 
-class xExtension_ArticleSummary_proxy_tts_Action extends Minz_ActionController {
+class FreshExtension_ArticleSummary_proxy_tts_Action extends Minz_ActionController {
   public function index() {
     $this->view->_layout(false);
 
