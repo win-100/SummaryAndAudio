@@ -11,6 +11,9 @@ class SummaryAndAudioExtension extends Minz_Extension
 
   public function init()
   {
+    // Minz_Extension::init() registers this extension's CSP policies. Without
+    // it, FreshRSS keeps only its default `connect-src 'self'` policy.
+    parent::init();
     $this->registerHook('entry_before_display', array($this, 'addSummaryButton'));
     $this->registerController('SummaryAndAudio');
     Minz_View::appendStyle($this->getFileUrl('style.css', 'css'));
