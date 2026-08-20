@@ -33,6 +33,7 @@ FreshRSS_Context::$user_conf = (object) [
     'oai_prompt' => 'prompt',
     'oai_prompt_2' => 'prompt2',
     'oai_provider' => 'openai',
+    'oai_tts_url' => 'http://192.168.1.10:8000',
     'oai_tts_model' => 'my-tts-model',
     'oai_voice' => 'my-voice',
     'oai_speed' => 1.1,
@@ -69,6 +70,7 @@ $ttsData = json_decode($ttsOutput, true);
 $voice = $ttsData['response']['data']['voice'] ?? null;
 $format = $ttsData['response']['data']['format'] ?? null;
 $speed = $ttsData['response']['data']['speed'] ?? null;
+$ttsUrl = $ttsData['response']['data']['oai_url'] ?? null;
 
 if ($voice !== 'my-voice') {
     echo "Voice mismatch: expected my-voice, got {$voice}\n";
@@ -85,9 +87,15 @@ if ($speed !== 1.1) {
     exit(1);
 }
 
+if ($ttsUrl !== 'http://192.168.1.10:8000/v1') {
+    echo "TTS URL mismatch: expected dedicated URL, got {$ttsUrl}\n";
+    exit(1);
+}
+
 echo "Voice matches configuration\n";
 echo "Format matches configuration\n";
 echo "Speed matches configuration\n";
+echo "Dedicated TTS URL matches configuration\n";
 
 // Verify header status code regex supports HTTP/2 responses
 $pattern = '#HTTP/\d+(?:\.\d+)?\s+(\d+)#';
@@ -108,4 +116,3 @@ foreach ($headers as $line) {
 }
 
 echo "Header regex matches HTTP/2 and HTTP/1.x responses\n";
-

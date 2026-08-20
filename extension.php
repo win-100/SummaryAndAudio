@@ -102,6 +102,7 @@ class SummaryAndAudioExtension extends Minz_Extension
       FreshRSS_Context::$user_conf->oai_prompt = Minz_Request::param('oai_prompt', '');
       FreshRSS_Context::$user_conf->oai_prompt_2 = Minz_Request::param('oai_prompt_2', '');
       FreshRSS_Context::$user_conf->oai_provider = Minz_Request::param('oai_provider', '');
+      FreshRSS_Context::$user_conf->oai_tts_url = Minz_Request::param('oai_tts_url', '');
       FreshRSS_Context::$user_conf->oai_tts_model = Minz_Request::param('oai_tts_model', '');
       FreshRSS_Context::$user_conf->oai_voice = Minz_Request::param('oai_voice', '');
       $speed = (float)Minz_Request::param('oai_speed', 1.1);

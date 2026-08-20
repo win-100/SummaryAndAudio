@@ -34,8 +34,9 @@ These settings control how article summaries are generated. You may choose the p
 ### Audio (OpenAI only)
 Audio playback always uses the OpenAI Text-to-Speech API, regardless of the provider selected for summaries.
 
-1. **Voice & TTS Model**: Choose the OpenAI voice and TTS model used for audio playback.
-2. **Reading Speed**: Set the playback speed between `0.5` and `4` (default `1.1`).
+1. **TTS API Address**: Enter the URL or IP address (and optional port) of the API used for speech, e.g. `http://192.168.1.10:8000`. Leave it empty to reuse the summary API URL.
+2. **Voice & TTS Model**: Choose the OpenAI voice and TTS model used for audio playback.
+3. **Reading Speed**: Set the playback speed between `0.5` and `4` (default `1.1`).
 
 ## Usage
 

@@ -9,6 +9,7 @@ return [
     'voice' => 'Voice',
     'speech_speed' => 'Speech speed',
     'tts_model' => 'TTS model',
+    'tts_base_url' => 'TTS API address (URL or IP)',
     'prompt' => 'Prompt for high-level summary',
     'prompt_2' => 'Prompt for detailed summary',
     'summary_settings' => 'Summary settings',

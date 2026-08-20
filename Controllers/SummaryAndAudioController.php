@@ -154,6 +154,10 @@ class FreshExtension_SummaryAndAudio_Controller extends Minz_ActionController
     $this->view->_layout(false);
 
     $oai_url = FreshRSS_Context::$user_conf->oai_url;
+    $tts_base_url = FreshRSS_Context::$user_conf->oai_tts_url ?? '';
+    if ($this->isEmpty($tts_base_url)) {
+      $tts_base_url = $oai_url;
+    }
     $oai_key = FreshRSS_Context::$user_conf->oai_key;
     $tts_model = FreshRSS_Context::$user_conf->oai_tts_model;
     $voice = FreshRSS_Context::$user_conf->oai_voice;
@@ -167,7 +171,7 @@ class FreshExtension_SummaryAndAudio_Controller extends Minz_ActionController
     $format = in_array($format, ['mp3', 'ogg', 'opus']) ? $format : 'opus';
 
     if (
-      $this->isEmpty($oai_url) ||
+      $this->isEmpty($tts_base_url) ||
       $this->isEmpty($oai_key) ||
       $this->isEmpty($tts_model) ||
       $this->isEmpty($voice) ||
@@ -184,11 +188,11 @@ class FreshExtension_SummaryAndAudio_Controller extends Minz_ActionController
       return;
     }
 
-    $oai_url = rtrim($oai_url, '/');
-    if (!preg_match('/\/v\d+\/?$/', $oai_url)) {
-      $oai_url .= '/v1';
+    $tts_base_url = rtrim($tts_base_url, '/');
+    if (!preg_match('/\/v\d+\/?$/', $tts_base_url)) {
+      $tts_base_url .= '/v1';
     }
-    $tts_url = $oai_url . '/audio/speech';
+    $tts_url = $tts_base_url . '/audio/speech';
 
     $headersSent = false;
     $statusCode = 0;
@@ -275,6 +279,10 @@ class FreshExtension_SummaryAndAudio_Controller extends Minz_ActionController
     header('Content-Type: application/json');
 
     $oai_url = FreshRSS_Context::$user_conf->oai_url;
+    $tts_base_url = FreshRSS_Context::$user_conf->oai_tts_url ?? '';
+    if ($this->isEmpty($tts_base_url)) {
+      $tts_base_url = $oai_url;
+    }
     $oai_key = FreshRSS_Context::$user_conf->oai_key;
     $tts_model = FreshRSS_Context::$user_conf->oai_tts_model;
     $voice = FreshRSS_Context::$user_conf->oai_voice;
@@ -285,7 +293,7 @@ class FreshExtension_SummaryAndAudio_Controller extends Minz_ActionController
     $speed = max(0.5, min(4, (float)$speed));
 
     if (
-      $this->isEmpty($oai_url) ||
+      $this->isEmpty($tts_base_url) ||
       $this->isEmpty($oai_key) ||
       $this->isEmpty($tts_model) ||
       $this->isEmpty($voice)
@@ -300,15 +308,15 @@ class FreshExtension_SummaryAndAudio_Controller extends Minz_ActionController
       return;
     }
 
-    $oai_url = rtrim($oai_url, '/');
-    if (!preg_match('/\/v\d+\/?$/', $oai_url)) {
-      $oai_url .= '/v1';
+    $tts_base_url = rtrim($tts_base_url, '/');
+    if (!preg_match('/\/v\d+\/?$/', $tts_base_url)) {
+      $tts_base_url .= '/v1';
     }
 
     $successResponse = array(
       'response' => array(
         'data' => array(
-          'oai_url' => $oai_url,
+          'oai_url' => $tts_base_url,
           'oai_key' => $oai_key,
           'model' => $tts_model,
           'voice' => $voice,

@@ -9,6 +9,7 @@ return [
     'voice' => 'Voix',
     'speech_speed' => 'Vitesse de lecture',
     'tts_model' => 'Modèle TTS',
+    'tts_base_url' => 'Adresse de l’API TTS (URL ou IP)',
     'prompt' => 'Prompt pour résumé haut niveau',
     'prompt_2' => 'Prompt pour résumé détaillé',
     'summary_settings' => 'Paramètres de résumé',
