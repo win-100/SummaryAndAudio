@@ -4,7 +4,9 @@ class SummaryAndAudioExtension extends Minz_Extension
   private static ?array $i18n = null;
 
   protected array $csp_policies = [
-    'default-src' => '*',
+    // Client-side TTS uses fetch(), which is governed by connect-src. Keep
+    // FreshRSS's default-src policy intact and relax only network connections.
+    'connect-src' => '*',
   ];
 
   public function init()
