@@ -59,8 +59,9 @@ if ($msg !== 'missing config') {
 
 echo "SummarizeAction reports missing config as expected\n";
 
-// Reset configuration with valid key for TTS test
-FreshRSS_Context::$user_conf->oai_key = 'test-key';
+// Client-side TTS is available only for unauthenticated APIs.
+FreshRSS_Context::$user_conf->oai_key = '';
+FreshRSS_Context::$user_conf->oai_tts_request_mode = 'client';
 
 // Test fetchTtsParamsAction()
 ob_start();
@@ -96,6 +97,19 @@ echo "Voice matches configuration\n";
 echo "Format matches configuration\n";
 echo "Speed matches configuration\n";
 echo "Dedicated TTS URL matches configuration\n";
+
+// A key must prevent the client configuration endpoint from exposing it.
+FreshRSS_Context::$user_conf->oai_key = 'test-key';
+ob_start();
+$controller->fetchTtsParamsAction();
+$protectedOutput = ob_get_clean();
+$protectedData = json_decode($protectedOutput, true);
+if (($protectedData['status'] ?? null) !== 403) {
+    echo "Expected client TTS parameters to be blocked when a key is configured\n";
+    exit(1);
+}
+
+echo "Client TTS parameters are protected when a key is configured\n";
 
 // Verify header status code regex supports HTTP/2 responses
 $pattern = '#HTTP/\d+(?:\.\d+)?\s+(\d+)#';

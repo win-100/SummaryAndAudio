@@ -6,6 +6,8 @@ $oai_tts_url = FreshRSS_Context::$user_conf->oai_tts_url ?? $oai_url;
 $oai_tts_model = FreshRSS_Context::$user_conf->oai_tts_model ?: 'gpt-tts-1';
 $oai_voice = FreshRSS_Context::$user_conf->oai_voice ?: 'alloy';
 $oai_speed = FreshRSS_Context::$user_conf->oai_speed ?: 1.1;
+$has_oai_key = trim((string)$oai_key) !== '';
+$oai_tts_request_mode = $has_oai_key ? 'server' : (FreshRSS_Context::$user_conf->oai_tts_request_mode ?: 'server');
 $oai_prompt = FreshRSS_Context::$user_conf->oai_prompt;
 $oai_prompt_2 = FreshRSS_Context::$user_conf->oai_prompt_2;
 $oai_provider = FreshRSS_Context::$user_conf->oai_provider ?: 'openai'; // Default to OpenAI
@@ -38,6 +40,12 @@ $oai_provider = FreshRSS_Context::$user_conf->oai_provider ?: 'openai'; // Defau
     <p><?php echo SummaryAndAudioExtension::t('audio_openai_only'); ?></p>
     <label for="oai_tts_url"><?php echo SummaryAndAudioExtension::t('tts_base_url'); ?></label>
     <input type="text" name="oai_tts_url" id="oai_tts_url" value="<?php echo $oai_tts_url; ?>" placeholder="http://192.168.1.10:8000">
+    <label for="oai_tts_request_mode"><?php echo SummaryAndAudioExtension::t('tts_request_mode'); ?></label>
+    <select name="oai_tts_request_mode" id="oai_tts_request_mode"<?php echo $has_oai_key ? ' disabled' : ''; ?>>
+      <option value="server" <?php echo ($oai_tts_request_mode === 'server' ? 'selected' : ''); ?>><?php echo SummaryAndAudioExtension::t('tts_request_server'); ?></option>
+      <option value="client" <?php echo ($oai_tts_request_mode === 'client' ? 'selected' : ''); ?>><?php echo SummaryAndAudioExtension::t('tts_request_client'); ?></option>
+    </select>
+    <p><?php echo SummaryAndAudioExtension::t('tts_request_mode_help'); ?></p>
     <label for="oai_voice"><?php echo SummaryAndAudioExtension::t('voice'); ?></label>
     <input type="text" name="oai_voice" id="oai_voice" value="<?php echo $oai_voice; ?>">
     <label for="oai_speed"><?php echo SummaryAndAudioExtension::t('speech_speed'); ?></label>

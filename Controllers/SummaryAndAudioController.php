@@ -172,7 +172,6 @@ class FreshExtension_SummaryAndAudio_Controller extends Minz_ActionController
 
     if (
       $this->isEmpty($tts_base_url) ||
-      $this->isEmpty($oai_key) ||
       $this->isEmpty($tts_model) ||
       $this->isEmpty($voice) ||
       $this->isEmpty($content)
@@ -207,12 +206,13 @@ class FreshExtension_SummaryAndAudio_Controller extends Minz_ActionController
       'input' => $content,
       'format' => $format,
     ]);
+    $headers = ['Content-Type: application/json'];
+    if (!$this->isEmpty($oai_key)) {
+      $headers[] = 'Authorization: Bearer ' . $oai_key;
+    }
     curl_setopt_array($ch, [
       CURLOPT_POST => true,
-      CURLOPT_HTTPHEADER => [
-        'Content-Type: application/json',
-        'Authorization: Bearer ' . $oai_key,
-      ],
+      CURLOPT_HTTPHEADER => $headers,
       CURLOPT_POSTFIELDS => $payload,
       CURLOPT_HEADERFUNCTION => function ($curl, $header) use (&$statusCode, &$respContentType) {
         $len = strlen($header);
@@ -284,6 +284,7 @@ class FreshExtension_SummaryAndAudio_Controller extends Minz_ActionController
       $tts_base_url = $oai_url;
     }
     $oai_key = FreshRSS_Context::$user_conf->oai_key;
+    $tts_request_mode = FreshRSS_Context::$user_conf->oai_tts_request_mode ?? 'server';
     $tts_model = FreshRSS_Context::$user_conf->oai_tts_model;
     $voice = FreshRSS_Context::$user_conf->oai_voice;
     $speed = FreshRSS_Context::$user_conf->oai_speed;
@@ -294,7 +295,6 @@ class FreshExtension_SummaryAndAudio_Controller extends Minz_ActionController
 
     if (
       $this->isEmpty($tts_base_url) ||
-      $this->isEmpty($oai_key) ||
       $this->isEmpty($tts_model) ||
       $this->isEmpty($voice)
     ) {
@@ -308,6 +308,17 @@ class FreshExtension_SummaryAndAudio_Controller extends Minz_ActionController
       return;
     }
 
+    // Do not expose an API key. This endpoint is used only for explicit,
+    // unauthenticated client-side TTS requests.
+    if (!$this->isEmpty($oai_key) || $tts_request_mode !== 'client') {
+      http_response_code(403);
+      echo json_encode(array(
+        'response' => array('data' => '', 'error' => 'client TTS is not enabled'),
+        'status' => 403,
+      ));
+      return;
+    }
+
     $tts_base_url = rtrim($tts_base_url, '/');
     if (!preg_match('/\/v\d+\/?$/', $tts_base_url)) {
       $tts_base_url .= '/v1';
@@ -317,7 +328,6 @@ class FreshExtension_SummaryAndAudio_Controller extends Minz_ActionController
       'response' => array(
         'data' => array(
           'oai_url' => $tts_base_url,
-          'oai_key' => $oai_key,
           'model' => $tts_model,
           'voice' => $voice,
           'speed' => $speed,

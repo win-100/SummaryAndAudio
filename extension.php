@@ -40,6 +40,15 @@ class SummaryAndAudioExtension extends Minz_Extension
       'c' => 'SummaryAndAudio',
       'a' => 'speak'
     ));
+    $tts_request_mode = FreshRSS_Context::$user_conf->oai_tts_request_mode ?? 'server';
+    // A configured key must never be sent to the browser. Client mode is for
+    // unauthenticated, typically local, OpenAI-compatible TTS services only.
+    $tts_client_mode = $this->isEmpty(FreshRSS_Context::$user_conf->oai_key)
+      && $tts_request_mode === 'client';
+    $url_tts_params = $tts_client_mode ? Minz_Url::display(array(
+      'c' => 'SummaryAndAudio',
+      'a' => 'fetchTtsParams'
+    )) : '';
     $icon_tts_play = str_replace('<svg ', '<svg class="oai-tts-icon oai-tts-play" ', file_get_contents(__DIR__ . '/static/img/play.svg'));
     $icon_tts_pause = str_replace('<svg ', '<svg class="oai-tts-icon oai-tts-pause" ', file_get_contents(__DIR__ . '/static/img/pause.svg'));
     $icon = str_replace('<svg ', '<svg class="oai-summary-icon" ', file_get_contents(__DIR__ . '/static/img/summary.svg'));
@@ -57,6 +66,7 @@ class SummaryAndAudioExtension extends Minz_Extension
       'data-audio-failed' => self::t('audio_failed'),
       'data-receiving-answer' => self::t('receiving_answer'),
       'data-request-failed' => self::t('request_failed'),
+      'data-tts-params-url' => $url_tts_params,
     ];
     $attr_str = '';
     foreach ($attrs as $name => $value) {
@@ -104,6 +114,8 @@ class SummaryAndAudioExtension extends Minz_Extension
       FreshRSS_Context::$user_conf->oai_provider = Minz_Request::param('oai_provider', '');
       FreshRSS_Context::$user_conf->oai_tts_url = Minz_Request::param('oai_tts_url', '');
       FreshRSS_Context::$user_conf->oai_tts_model = Minz_Request::param('oai_tts_model', '');
+      $tts_request_mode = Minz_Request::param('oai_tts_request_mode', 'server');
+      FreshRSS_Context::$user_conf->oai_tts_request_mode = $tts_request_mode === 'client' ? 'client' : 'server';
       FreshRSS_Context::$user_conf->oai_voice = Minz_Request::param('oai_voice', '');
       $speed = (float)Minz_Request::param('oai_speed', 1.1);
       if ($speed < 0.5 || $speed > 4) {
@@ -112,5 +124,10 @@ class SummaryAndAudioExtension extends Minz_Extension
       FreshRSS_Context::$user_conf->oai_speed = $speed;
       FreshRSS_Context::$user_conf->save();
     }
+  }
+
+  private function isEmpty($item): bool
+  {
+    return $item === null || trim((string)$item) === '';
   }
 }

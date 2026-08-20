@@ -404,6 +404,7 @@ async function ttsButtonClick(target, forceStop = false, preload = false) {
   }
 
   const url = target.dataset.request;
+  const ttsParamsUrl = container.dataset.ttsParamsUrl;
   const form = new URLSearchParams();
   form.append('ajax', 'true');
   form.append('_csrf', context.csrf);
@@ -428,9 +429,44 @@ async function ttsButtonClick(target, forceStop = false, preload = false) {
   try {
     const audio = target._audio || document.createElement('audio');
     if (!target._audio) {
-      const qs = url.includes('?') ? '&' : '?';
-      const audioUrl = url + qs + form.toString();
-      audio.src = audioUrl;
+      if (ttsParamsUrl) {
+        const paramsRequest = new URLSearchParams();
+        paramsRequest.append('ajax', 'true');
+        paramsRequest.append('_csrf', context.csrf);
+        const paramsResponse = await fetch(ttsParamsUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: paramsRequest
+        });
+        if (!paramsResponse.ok) {
+          throw new Error('Unable to load TTS parameters');
+        }
+        const paramsPayload = await paramsResponse.json();
+        const params = paramsPayload.response && paramsPayload.response.data;
+        if (!params || !params.oai_url || !params.model || !params.voice) {
+          throw new Error('Invalid TTS parameters');
+        }
+        const response = await fetch(params.oai_url + '/audio/speech', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: params.model,
+            voice: params.voice,
+            speed: params.speed,
+            input: text,
+            format: responseFormat
+          })
+        });
+        if (!response.ok) {
+          throw new Error('TTS request failed');
+        }
+        target._audioUrl = URL.createObjectURL(await response.blob());
+        audio.src = target._audioUrl;
+      } else {
+        const qs = url.includes('?') ? '&' : '?';
+        const audioUrl = url + qs + form.toString();
+        audio.src = audioUrl;
+      }
       audio.preload = 'auto';
       audio.load();
       audio.addEventListener('ended', () => {
@@ -493,4 +529,3 @@ async function ttsButtonClick(target, forceStop = false, preload = false) {
     }
   }
 }
-
