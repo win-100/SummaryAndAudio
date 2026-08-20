@@ -45,10 +45,21 @@ class SummaryAndAudioExtension extends Minz_Extension
     // unauthenticated, typically local, OpenAI-compatible TTS services only.
     $tts_client_mode = $this->isEmpty(FreshRSS_Context::$user_conf->oai_key)
       && $tts_request_mode === 'client';
-    $url_tts_params = $tts_client_mode ? Minz_Url::display(array(
-      'c' => 'SummaryAndAudio',
-      'a' => 'fetchTtsParams'
-    )) : '';
+    $tts_base_url = FreshRSS_Context::$user_conf->oai_tts_url ?? '';
+    if ($this->isEmpty($tts_base_url)) {
+      $tts_base_url = FreshRSS_Context::$user_conf->oai_url;
+    }
+    $tts_base_url = rtrim($tts_base_url, '/');
+    if (!$this->isEmpty($tts_base_url) && !preg_match('/\/v\d+\/?$/', $tts_base_url)) {
+      $tts_base_url .= '/v1';
+    }
+    $tts_model = FreshRSS_Context::$user_conf->oai_tts_model ?? '';
+    $tts_voice = FreshRSS_Context::$user_conf->oai_voice ?? '';
+    $tts_speed = FreshRSS_Context::$user_conf->oai_speed;
+    if ($tts_speed === null || !is_numeric($tts_speed)) {
+      $tts_speed = 1.1;
+    }
+    $tts_speed = max(0.5, min(4, (float)$tts_speed));
     $icon_tts_play = str_replace('<svg ', '<svg class="oai-tts-icon oai-tts-play" ', file_get_contents(__DIR__ . '/static/img/play.svg'));
     $icon_tts_pause = str_replace('<svg ', '<svg class="oai-tts-icon oai-tts-pause" ', file_get_contents(__DIR__ . '/static/img/pause.svg'));
     $icon = str_replace('<svg ', '<svg class="oai-summary-icon" ', file_get_contents(__DIR__ . '/static/img/summary.svg'));
@@ -66,7 +77,12 @@ class SummaryAndAudioExtension extends Minz_Extension
       'data-audio-failed' => self::t('audio_failed'),
       'data-receiving-answer' => self::t('receiving_answer'),
       'data-request-failed' => self::t('request_failed'),
-      'data-tts-params-url' => $url_tts_params,
+      // In client mode these values are non-sensitive: client mode is
+      // available only when no API key is configured.
+      'data-tts-client-url' => $tts_client_mode ? $tts_base_url : '',
+      'data-tts-client-model' => $tts_client_mode ? $tts_model : '',
+      'data-tts-client-voice' => $tts_client_mode ? $tts_voice : '',
+      'data-tts-client-speed' => $tts_client_mode ? $tts_speed : '',
     ];
     $attr_str = '';
     foreach ($attrs as $name => $value) {

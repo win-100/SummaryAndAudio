@@ -404,7 +404,7 @@ async function ttsButtonClick(target, forceStop = false, preload = false) {
   }
 
   const url = target.dataset.request;
-  const ttsParamsUrl = container.dataset.ttsParamsUrl;
+  const ttsClientUrl = container.dataset.ttsClientUrl;
   const form = new URLSearchParams();
   form.append('ajax', 'true');
   form.append('_csrf', context.csrf);
@@ -429,30 +429,19 @@ async function ttsButtonClick(target, forceStop = false, preload = false) {
   try {
     const audio = target._audio || document.createElement('audio');
     if (!target._audio) {
-      if (ttsParamsUrl) {
-        const paramsRequest = new URLSearchParams();
-        paramsRequest.append('ajax', 'true');
-        paramsRequest.append('_csrf', context.csrf);
-        const paramsResponse = await fetch(ttsParamsUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: paramsRequest
-        });
-        if (!paramsResponse.ok) {
-          throw new Error('Unable to load TTS parameters');
-        }
-        const paramsPayload = await paramsResponse.json();
-        const params = paramsPayload.response && paramsPayload.response.data;
-        if (!params || !params.oai_url || !params.model || !params.voice) {
+      if (ttsClientUrl) {
+        const model = container.dataset.ttsClientModel;
+        const voice = container.dataset.ttsClientVoice;
+        if (!model || !voice) {
           throw new Error('Invalid TTS parameters');
         }
-        const response = await fetch(params.oai_url + '/audio/speech', {
+        const response = await fetch(ttsClientUrl + '/audio/speech', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            model: params.model,
-            voice: params.voice,
-            speed: params.speed,
+            model: model,
+            voice: voice,
+            speed: Number(container.dataset.ttsClientSpeed),
             input: text,
             format: responseFormat
           })

@@ -59,58 +59,6 @@ if ($msg !== 'missing config') {
 
 echo "SummarizeAction reports missing config as expected\n";
 
-// Client-side TTS is available only for unauthenticated APIs.
-FreshRSS_Context::$user_conf->oai_key = '';
-FreshRSS_Context::$user_conf->oai_tts_request_mode = 'client';
-
-// Test fetchTtsParamsAction()
-ob_start();
-$controller->fetchTtsParamsAction();
-$ttsOutput = ob_get_clean();
-$ttsData = json_decode($ttsOutput, true);
-$voice = $ttsData['response']['data']['voice'] ?? null;
-$format = $ttsData['response']['data']['format'] ?? null;
-$speed = $ttsData['response']['data']['speed'] ?? null;
-$ttsUrl = $ttsData['response']['data']['oai_url'] ?? null;
-
-if ($voice !== 'my-voice') {
-    echo "Voice mismatch: expected my-voice, got {$voice}\n";
-    exit(1);
-}
-
-if ($format !== 'opus') {
-    echo "Format mismatch: expected opus, got {$format}\n";
-    exit(1);
-}
-
-if ($speed !== 1.1) {
-    echo "Speed mismatch: expected 1.1, got {$speed}\n";
-    exit(1);
-}
-
-if ($ttsUrl !== 'http://192.168.1.10:8000/v1') {
-    echo "TTS URL mismatch: expected dedicated URL, got {$ttsUrl}\n";
-    exit(1);
-}
-
-echo "Voice matches configuration\n";
-echo "Format matches configuration\n";
-echo "Speed matches configuration\n";
-echo "Dedicated TTS URL matches configuration\n";
-
-// A key must prevent the client configuration endpoint from exposing it.
-FreshRSS_Context::$user_conf->oai_key = 'test-key';
-ob_start();
-$controller->fetchTtsParamsAction();
-$protectedOutput = ob_get_clean();
-$protectedData = json_decode($protectedOutput, true);
-if (($protectedData['status'] ?? null) !== 403) {
-    echo "Expected client TTS parameters to be blocked when a key is configured\n";
-    exit(1);
-}
-
-echo "Client TTS parameters are protected when a key is configured\n";
-
 // Verify header status code regex supports HTTP/2 responses
 $pattern = '#HTTP/\d+(?:\.\d+)?\s+(\d+)#';
 $headers = [
